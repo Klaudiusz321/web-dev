@@ -128,6 +128,7 @@ docker compose ps
 # View logs
 docker compose logs -f
 ```
+or by the using dev container
 
 #### Option B: Local Development
 For development with hot reload:
