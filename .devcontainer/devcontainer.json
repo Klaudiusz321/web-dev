@@ -1,0 +1,102 @@
+{
+  "name": "Web Crawler Dev Environment",
+  "dockerComposeFile": "../docker-compose.dev.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+  
+  // Features to install
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.22"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  // VS Code extensions to install
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Go extensions
+        "golang.Go",
+        
+        // Frontend extensions
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        
+        // Database extensions
+        "ms-mssql.mssql",
+        "cweijan.vscode-mysql-client2",
+        
+        // Docker extensions
+        "ms-azuretools.vscode-docker",
+        
+        // General extensions
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-playwright.playwright",
+        "ms-vscode.test-adapter-converter"
+      ],
+      "settings": {
+        "go.toolsManagement.checkForUpdates": "local",
+        "go.useLanguageServer": true,
+        "go.gopath": "/go",
+        "go.goroot": "/usr/local/go",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[go]": {
+          "editor.defaultFormatter": "golang.go"
+        },
+        "typescript.preferences.quoteStyle": "single",
+        "javascript.preferences.quoteStyle": "single",
+        "prettier.singleQuote": true,
+        "prettier.semi": false,
+        "prettier.trailingComma": "es5"
+      }
+    }
+  },
+
+  // Forward ports
+  "forwardPorts": [3000, 8080, 3306],
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend (React/Vite)",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Backend (Go/Gin)",
+      "onAutoForward": "notify"
+    },
+    "3306": {
+      "label": "MySQL Database",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // Post-creation commands
+  // "postCreateCommand": "npm install && cd backend && go mod download",
+
+  // Environment variables
+  "containerEnv": {
+    "DATABASE_URL": "crawler:password@tcp(mysql:3306)/webcrawler?charset=utf8mb4&parseTime=True&loc=Local",
+    "ENVIRONMENT": "development",
+    "JWT_SECRET": "development-secret-key",
+    "PORT": "8080"
+  },
+
+  // Mount the Docker socket for Docker-in-Docker
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+
+  // User configuration
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true
+} 

@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Development container
+  devcontainer:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - .:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DATABASE_URL=crawler:password@tcp(mysql:3306)/webcrawler?charset=utf8mb4&parseTime=True&loc=Local
+      - ENVIRONMENT=development
+      - JWT_SECRET=development-secret-key
+      - PORT=8080
+    command: sleep infinity
+    networks:
+      - webcrawler-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: webcrawler
+      MYSQL_USER: crawler
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - webcrawler-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "crawler", "-ppassword"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 60s
+
+  # Backend (Go + Gin) - for testing production builds
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: crawler:password@tcp(mysql:3306)/webcrawler?charset=utf8mb4&parseTime=True&loc=Local
+      PORT: 8080
+      JWT_SECRET: development-secret-key
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - webcrawler-network
+    restart: unless-stopped
+
+  # Frontend (React + Vite) - for testing production builds  
+  frontend:
+    build:
+      context: ./my-vite-project
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - webcrawler-network
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: /api/v1
+
+volumes:
+  mysql_data:
+
+networks:
+  webcrawler-network:
+    driver: bridge 
